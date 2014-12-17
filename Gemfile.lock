@@ -1,0 +1,30 @@
+PATH
+  remote: .
+  specs:
+    raw_net_capture (0.1.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    appraisal (1.0.0)
+      bundler
+      rake
+      thor (>= 0.14.0)
+    bump (0.5.0)
+    minitest (5.2.0)
+    minitest-rg (5.1.0)
+      minitest (~> 5.0)
+    rake (10.3.1)
+    thor (0.19.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  appraisal
+  bump
+  bundler
+  minitest
+  minitest-rg
+  rake
+  raw_net_capture!
