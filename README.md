@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/zendesk/raw_net_capture.png)](https://travis-ci.org/zendesk/raw_net_capture)
+[![Build Status](https://travis-ci.org/ggrossman/raw_net_capture.png)](https://travis-ci.org/ggrossman/raw_net_capture)
 
 raw_net_capture
 ===============
