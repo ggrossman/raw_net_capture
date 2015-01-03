@@ -53,11 +53,45 @@ This is fine for human-readability, but you may want to capture the raw
 data instead.
 
 To that end, this gem provides a simple extension to Ruby's `debug_output`
-mechanism. `RawNetCapture` is a subclass of `StringIO` that can be supplied
+mechanism:
+
+* If the `debug_output` object has a `sent` method (i.e,
+`debug_output.respond_to?(:sent)` is `true`), the `sent` method will
+be invoked whenever data is sent over the connection with a string
+containing the data sent.
+
+* If the `debug_output` object has a `received` method (i.e,
+`debug_output.respond_to?(:received)` is `true`), the `received` method will
+be invoked whenever data is received over the connection with a string
+containing the data received.
+
+Two classes that implement this interface are also provided.
+
+### RawNetCapture
+
+`RawNetCapture` is a subclass of `StringIO` that can be supplied
 to the `set_debug_output` method.
 
 If the object supplied to `set_debug_output` is an instance of
 `RawNetCapture`, it will still capture all of the text in the above
+format just like any other `StringIO`, but there will also be a
+`raw_traffic` method which returns an array representing all of the
+raw network traffic.
+
+Each element in the `raw_traffic` array is a tuple of the form
+`[:sent, data]` or `[:received, data]`. For example:
+
+```
+[[:sent, "GET / HTTP/1.1\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.google.com\r\n\r\n"]]
+```
+
+### RawHTTPCapture
+
+`RawHTTPCapture` is also a subclass of `StringIO` that can be supplied
+to the `set_debug_output` method.
+
+If the object supplied to `set_debug_output` is an instance of
+`RawHTTPCapture`, it will still capture all of the text in the above
 format just like any other `StringIO`, but there will also be two
 additional `StringIO` objects available on the `RawNetCapture` object,
 `raw_sent` and `raw_received`. These will contain the raw data sent
@@ -67,7 +101,8 @@ Since separating the sent and received data into `raw_sent` and
 `raw_received` makes it impossible to track what data was sent and
 received in what order like the standard debug output format,
 this is mostly useful for HTTP traffic where there is a clear request
-and response to be captured.
+and response to be captured. Use `RawNetCapture` if you need to
+capture the exact interchange of sent and received data.
 
 ### Example
 
@@ -76,7 +111,7 @@ require 'net/https'
 require 'uri'
 require 'raw_net_capture'
 
-capture = RawNetCapture.new
+capture = RawHTTPCapture.new
 
 uri = URI.parse("https://www.google.com/")
 http = Net::HTTP.new(uri.host, uri.port)
