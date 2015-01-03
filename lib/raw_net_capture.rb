@@ -1,13 +1,46 @@
 # encoding: utf-8
 
 class RawNetCapture < StringIO
-  def raw_received
-    @raw_received ||= StringIO.new
+  attr_reader :raw_traffic
+
+  def initialize
+    super
+    reset
   end
 
-  def raw_sent
-    @raw_sent ||= StringIO.new
-  end  
+  def received(data)
+    @raw_traffic << [:received, data]
+  end
+
+  def sent(data)
+    @raw_traffic << [:sent, data]
+  end
+
+  def reset
+    @raw_traffic = []
+  end
+end
+
+class RawHTTPCapture < StringIO
+  attr_reader :raw_received, :raw_sent
+
+  def initialize
+    super
+    reset
+  end
+
+  def reset
+    @raw_received = StringIO.new
+    @raw_sent = StringIO.new
+  end
+
+  def received(data)
+    @raw_received << data
+  end
+
+  def sent(data)
+    @raw_sent << data
+  end
 end
 
 module Net
@@ -18,7 +51,7 @@ module Net
       s = @rbuf.slice!(0, len)
       if @debug_output
         @debug_output << %Q[-> #{s.dump}\n]
-        @debug_output.raw_received << s if @debug_output.is_a?(RawNetCapture)
+        @debug_output.received(s) if @debug_output.respond_to?(:received)
       end
       s
     end
@@ -26,7 +59,7 @@ module Net
     def write0(str)
       if @debug_output
         @debug_output << str.dump
-        @debug_output.raw_sent << str if @debug_output.is_a?(RawNetCapture)
+        @debug_output.sent(str) if @debug_output.respond_to?(:sent)
       end
       len = @io.write(str)
       @written_bytes += len
