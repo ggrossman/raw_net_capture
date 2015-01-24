@@ -43,8 +43,9 @@ class RawHTTPCapture < StringIO
   end
 
   def headers_only!
-    if headers_end_index = @raw_received.string.index("\r\n\r\n")
-      @raw_received.truncate(headers_end_index+2)
+    separator = "\r\n\r\n"
+    if headers_end_index = @raw_received.string.index(separator)
+      @raw_received.truncate(headers_end_index+separator.length)
     end
     !!headers_end_index
   end

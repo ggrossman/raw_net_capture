@@ -53,7 +53,7 @@ class RawNetCaptureTest < MiniTest::Test
         headers = capture.raw_received.string
         assert headers.length < original_length
         assert headers.start_with?('HTTP/1.1 200 OK')
-        assert headers.end_with?("Connection: close\r\n")
+        assert headers.end_with?("Connection: close\r\n\r\n")
       end
     end
   end
