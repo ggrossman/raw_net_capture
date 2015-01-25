@@ -37,21 +37,22 @@ class RawNetCaptureTest < MiniTest::Test
       assert_match(/\AHTTP\/1.1 200 OK.*\z/m, capture.raw_received.string)
     end
 
-    describe "#headers_only!" do
+    describe "#headers" do
+      before do
+        @capture = RawHTTPCapture.new
+        @capture.received "HTTP/1.1 200 OK\r\n"
+        @capture.received "Date: Sun, 25 Jan 2015 11:23:31 GMT\r\n"
+        @capture.received "Content-Type: text/html; charset=ISO-8859-1\r\n"
+        @capture.received "Connection: close\r\n\r\n"
+        @capture.received "<html>\r\n"
+        @capture.received "<head><title>Document Title</title></head>\r\n"
+        @capture.received "<body>This is some body text.</body>\r\n"
+        @capture.received "</html>\r\n"
+      end
+
       it "removes HTTP response body" do
-        capture = RawHTTPCapture.new
-
-        uri = URI.parse("https://www.google.com/")
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        http.set_debug_output capture
-        response = http.get(uri.request_uri)
-
-        original_length = capture.raw_received.string.length
-        assert true, capture.headers_only!
-
-        headers = capture.raw_received.string
-        assert headers.length < original_length
+        headers = @capture.headers
+        assert headers.length < @capture.raw_received.string.length
         assert headers.start_with?('HTTP/1.1 200 OK')
         assert headers.end_with?("Connection: close\r\n\r\n")
       end
