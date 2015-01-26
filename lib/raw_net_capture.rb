@@ -41,6 +41,16 @@ class RawHTTPCapture < StringIO
   def sent(data)
     @raw_sent << data
   end
+
+  def headers
+    separator = "\r\n\r\n"
+    raw_string = @raw_received.string
+    if headers_end_index = raw_string.index(separator)
+      raw_string[0...(headers_end_index + separator.length)]
+    else
+      raw_string
+    end
+  end
 end
 
 module Net
