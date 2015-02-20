@@ -1,9 +1,6 @@
 # encoding: utf-8
 require File.expand_path '../helper', __FILE__
 
-require 'net/https'
-require 'uri'
-
 class RawNetCaptureTest < MiniTest::Test
   describe "with get to google" do
     let(:http) do
