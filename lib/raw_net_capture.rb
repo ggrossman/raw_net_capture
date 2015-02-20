@@ -36,9 +36,8 @@ class RawHTTPCapture < StringIO
   end
 
   def sent(data)
-    if raw_received.length > 0
-      reset
-    end
+    # when there are multiple requests on the same connection, E.g. redirection, we want the last one.
+    reset if raw_received.length > 0
 
     @raw_sent << data
   end
