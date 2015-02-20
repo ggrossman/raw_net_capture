@@ -9,22 +9,16 @@ class RawNetCapture < StringIO
   end
 
   def received(data)
-    @received = true
     @raw_traffic << [:received, data]
   end
 
   def sent(data)
-    if @received
-      reset
-    end
-
     @raw_traffic << [:sent, data]
   end
 
   private
 
   def reset
-    @received = false
     @raw_traffic = []
   end
 end
@@ -38,12 +32,11 @@ class RawHTTPCapture < StringIO
   end
 
   def received(data)
-    @received = true
     @raw_received << data
   end
 
   def sent(data)
-    if @received
+    if raw_received.length > 0
       reset
     end
 
@@ -64,7 +57,6 @@ class RawHTTPCapture < StringIO
   private
 
   def reset
-    @received = false
     @raw_received = StringIO.new
     @raw_sent = StringIO.new
   end

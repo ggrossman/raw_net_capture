@@ -24,21 +24,6 @@ class RawNetCaptureTest < MiniTest::Test
         assert_match(/\AGET \/ HTTP\/1.1.*Host: www.google.com.*\z/m, raw_sent)
         assert_match(/\AHTTP\/1.1 200 OK.*\z/m, raw_received)
       end
-
-      describe "and another get to google finance" do
-        before do
-          uri = URI.parse("https://www.google.com/finance?q=NYSE:ZEN")
-          http.get(uri.request_uri)
-        end
-
-        it "captures the last request when multiple are invoked" do
-          raw_sent = capture.raw_traffic.select { |x| x[0] == :sent }.map { |x| x[1] }.join
-          raw_received = capture.raw_traffic.select { |x| x[0] == :received }.map { |x| x[1] }.join
-
-          assert_match(/\AGET \/finance\?q=NYSE:ZEN HTTP\/1.1.*Host: www.google.com.*\z/m, raw_sent)
-          assert_match(/\AHTTP\/1.1 200 OK.*\z/m, raw_received)
-        end
-      end
     end
 
     describe RawHTTPCapture do
