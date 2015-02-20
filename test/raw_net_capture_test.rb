@@ -67,7 +67,7 @@ class RawNetCaptureTest < MiniTest::Test
       end
 
       describe "#headers" do
-        it "removes HTTP response body" do
+        it "removes the response body" do
           headers = capture.headers
           assert headers.length < capture.raw_received.string.length
           assert headers.start_with?('HTTP/1.1 200 OK')
