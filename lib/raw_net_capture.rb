@@ -16,6 +16,8 @@ class RawNetCapture < StringIO
     @raw_traffic << [:sent, data]
   end
 
+  private
+
   def reset
     @raw_traffic = []
   end
@@ -29,27 +31,33 @@ class RawHTTPCapture < StringIO
     reset
   end
 
-  def reset
-    @raw_received = StringIO.new
-    @raw_sent = StringIO.new
-  end
-
   def received(data)
     @raw_received << data
   end
 
   def sent(data)
+    # when there are multiple requests on the same connection, E.g. redirection, we want the last one.
+    reset if raw_received.length > 0
+
     @raw_sent << data
   end
 
   def headers
     separator = "\r\n\r\n"
     raw_string = @raw_received.string
+
     if headers_end_index = raw_string.index(separator)
       raw_string[0...(headers_end_index + separator.length)]
     else
       raw_string
     end
+  end
+
+  private
+
+  def reset
+    @raw_received = StringIO.new
+    @raw_sent = StringIO.new
   end
 end
 
@@ -58,12 +66,12 @@ module Net
     private
 
     def rbuf_consume(len)
-      s = @rbuf.slice!(0, len)
+      str = @rbuf.slice!(0, len)
       if @debug_output
-        @debug_output << %Q[-> #{s.dump}\n]
-        @debug_output.received(s) if @debug_output.respond_to?(:received)
+        @debug_output << %Q[-> #{str.dump}\n]
+        @debug_output.received(str) if @debug_output.respond_to?(:received)
       end
-      s
+      str
     end
 
     def write0(str)
@@ -71,6 +79,7 @@ module Net
         @debug_output << str.dump
         @debug_output.sent(str) if @debug_output.respond_to?(:sent)
       end
+
       len = @io.write(str)
       @written_bytes += len
       len
