@@ -113,6 +113,22 @@ class RawNetCaptureTest < MiniTest::Test
               end
             end
           end
+
+          describe "when there is invalid UTF-8 in the body" do
+            before { capture.raw_received.stubs(:string).returns("GET / HTTP/1.1\r\n\r\nOl\xAD") }
+
+            describe "#body" do
+              it "returns nil" do
+                assert_equal "Ol\xAD", transaction.response.body
+              end
+            end
+
+            describe "#headers" do
+              it "returns nil" do
+                assert_equal "GET / HTTP/1.1", transaction.response.headers
+              end
+            end
+          end
         end
 
         describe "#request" do
