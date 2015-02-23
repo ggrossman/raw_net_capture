@@ -36,6 +36,10 @@ class RawNetCaptureTest < MiniTest::Test
         assert_match(/\AHTTP\/1.1 200 OK.*\z/m, capture.raw_received.string)
       end
 
+      it "created one transaction" do
+        assert_equal 1, capture.transactions.size
+      end
+
       describe "and another get to google finance" do
         before do
           uri = URI.parse("https://www.google.com/finance?q=NYSE:ZEN")
@@ -46,14 +50,125 @@ class RawNetCaptureTest < MiniTest::Test
           assert_match(/\AGET \/finance\?q=NYSE:ZEN HTTP\/1.1.*Host: www.google.com.*\z/m, capture.raw_sent.string)
           assert_match(/\AHTTP\/1.1 200 OK.*\z/m, capture.raw_received.string)
         end
+
+        it "creates 2 transactions" do
+          assert_equal 2, capture.transactions.size
+        end
       end
 
-      describe "#headers" do
-        it "removes the response body" do
-          headers = capture.headers
-          assert headers.length < capture.raw_received.string.length
-          assert headers.start_with?('HTTP/1.1 200 OK')
-          assert headers.end_with?("Connection: close\r\n\r\n")
+      describe "#transaction" do
+        let(:transaction) { RawHTTPCapture::Transaction.new(capture) }
+
+        describe "#response" do
+          it "returns a response object" do
+            assert_instance_of RawHTTPCapture::Transaction::Response, transaction.response
+          end
+        end
+
+        describe "Response" do
+          describe "when the raw_http_capture#raw_received#string returns a proper http response with a body" do
+            before { capture.raw_received.stubs(:string => "GET / HTTP/1.1\r\n\r\n{}") }
+
+            describe "#body" do
+              it "returns the body" do
+                assert_equal "{}", transaction.response.body
+              end
+            end
+
+            describe "#headers" do
+              it "returns the headers" do
+                assert_equal "GET / HTTP/1.1", transaction.response.headers
+              end
+            end
+          end
+
+          describe "when the raw_http_capture#raw_received#string returns a proper http response without a body" do
+            before { capture.raw_received.stubs(:string => "GET / HTTP/1.1\r\n\r\n") }
+
+            describe "#body" do
+              it "returns nil" do
+                assert_nil transaction.response.body
+              end
+            end
+
+            describe "#headers" do
+              it "returns the headers" do
+                assert_equal "GET / HTTP/1.1", transaction.response.headers
+              end
+            end
+          end
+
+          describe "when the raw_http_capture#raw_received returns an empty string" do
+            before { capture.raw_received.stubs(:string).returns('') }
+
+            describe "#body" do
+              it "returns nil" do
+                assert_nil transaction.response.body
+              end
+            end
+
+            describe "#headers" do
+              it "returns nil" do
+                assert_nil transaction.response.headers
+              end
+            end
+          end
+        end
+
+        describe "#request" do
+          it "returns a request object" do
+            assert_instance_of RawHTTPCapture::Transaction::Request, transaction.request
+          end
+        end
+
+        describe "Request" do
+          describe "when the raw_http_capture#raw_sent#string returns a proper http response with a body" do
+            before { capture.raw_sent.stubs(:string => "GET / HTTP/1.1\r\n\r\n{}") }
+
+            describe "#body" do
+              it "returns the body" do
+                assert_equal "{}", transaction.request.body
+              end
+            end
+
+            describe "#headers" do
+              it "returns the headers" do
+                assert_equal "GET / HTTP/1.1", transaction.request.headers
+              end
+            end
+          end
+
+          describe "when the raw_http_capture#raw_sent#string returns a proper http response without a body" do
+            before { capture.raw_sent.stubs(:string).returns("GET / HTTP/1.1\r\n\r\n") }
+
+            describe "#body" do
+              it "returns nil" do
+                assert_nil transaction.request.body
+              end
+            end
+
+            describe "#headers" do
+              it "returns the headers" do
+                assert_equal "GET / HTTP/1.1", transaction.request.headers
+              end
+            end
+          end
+
+          describe "when the raw_http_capture#raw_sent returns an empty string" do
+            before { capture.raw_sent.stubs(:string).returns('') }
+
+            describe "#body" do
+              it "returns nil" do
+                assert_nil transaction.request.body
+              end
+            end
+
+            describe "#headers" do
+              it "returns nil" do
+                assert_nil transaction.request.headers
+              end
+            end
+          end
         end
       end
     end

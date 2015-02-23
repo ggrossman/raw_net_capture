@@ -1,6 +1,7 @@
 require 'bundler/setup'
 require 'minitest/autorun'
 require 'minitest/rg'
+require 'mocha/mini_test'
 require 'raw_net_capture'
 require 'net/https'
 require 'uri'
