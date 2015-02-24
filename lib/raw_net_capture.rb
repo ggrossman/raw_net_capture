@@ -67,7 +67,7 @@ class RawHTTPCapture < StringIO
       @response = Response.new(capture.send(:raw_received))
     end
 
-    class TransactionPart
+    class Part
       attr_reader :headers, :body, :raw
 
       def initialize(raw_io)
@@ -109,7 +109,8 @@ class RawHTTPCapture < StringIO
       end
     end
 
-    Response = Request = TransactionPart
+    class Response < Part; end
+    class Request < Part; end
   end
 end
 
