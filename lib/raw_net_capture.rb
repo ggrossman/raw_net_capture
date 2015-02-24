@@ -24,7 +24,7 @@ class RawNetCapture < StringIO
 end
 
 class RawHTTPCapture < StringIO
-  attr_reader :raw_received, :raw_sent, :transactions
+  attr_reader :transactions
 
   def initialize
     super
@@ -37,8 +37,7 @@ class RawHTTPCapture < StringIO
 
   def sent(data)
     # when there are multiple requests on the same connection, E.g. redirection, we want the last one.
-    if raw_received.length > 0
-      _transactions << Transaction.new(self)
+    if @raw_received.length > 0
       reset
     end
 
@@ -46,22 +45,17 @@ class RawHTTPCapture < StringIO
   end
 
   def transactions
-    _transactions.tap do |transactions|
-      if raw_received.length > 0
-        transactions << Transaction.new(self)
-      end
-    end
+    @transactions ||= []
   end
 
   private
 
-  def _transactions
-    @transactions ||= []
-  end
+  attr_reader :raw_sent, :raw_received
 
   def reset
     @raw_received = StringIO.new
     @raw_sent = StringIO.new
+    transactions << Transaction.new(self)
   end
 
   class Transaction
@@ -69,31 +63,53 @@ class RawHTTPCapture < StringIO
     attr_reader :response, :request
 
     def initialize(capture)
-      @request = Request.new(capture)
-      @response = Response.new(capture)
+      @request = Request.new(capture.send(:raw_sent))
+      @response = Response.new(capture.send(:raw_received))
     end
 
-    class ExchangePart
-      attr_reader :headers, :body
+    class TransactionPart
+      attr_reader :headers, :body, :raw
 
-      def initialize(capture)
-        raw_string = capture.send(method).string
+      def initialize(raw_io)
+        @raw_io = raw_io
+      end
 
-        @headers, _, @body = raw_string.partition(HEADER_BODY_SEPARATOR).map { |p| p.empty? ? nil : p  }
+      def body
+        @body ||= unless calculated_parts?
+          calculate_parts
+          body
+        end
+      end
+
+      def headers
+        @headers ||= unless calculated_parts?
+          calculate_parts
+          headers
+        end
+      end
+
+      def raw
+        @raw ||= raw_io.string
+      end
+
+      private
+
+      attr_reader :raw_io
+
+      def calculate_parts
+        @headers, _, @body = raw.partition(HEADER_BODY_SEPARATOR).map do |part|
+          part.empty? ? nil : part
+        end
+
+        @calculated_parts = true
+      end
+
+      def calculated_parts?
+        !!@calculated_parts
       end
     end
 
-    class Response < ExchangePart
-      def method
-        'raw_received'
-      end
-    end
-
-    class Request < ExchangePart
-      def method
-        'raw_sent'
-      end
-    end
+    Response = Request = TransactionPart
   end
 end
 
