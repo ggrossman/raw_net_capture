@@ -90,6 +90,7 @@ class RawHTTPCapture < StringIO
 
       attr_reader :raw_io
 
+      # headers and body
       def parts
         @parts ||= raw.partition(HEADER_BODY_SEPARATOR).map do |part|
           part.empty? ? nil : part
