@@ -11,7 +11,7 @@ class RawHTTPCaptureTest < MiniTest::Test
     end
 
     describe "Transaction" do
-      let(:transaction) { RawHTTPCapture::Transaction.new(capture) }
+      let(:transaction) { RawHTTPCapture::Transaction.new }
 
       describe "#response" do
         it "returns a response object" do
@@ -21,7 +21,7 @@ class RawHTTPCaptureTest < MiniTest::Test
 
       describe "Response" do
         describe "when the raw_http_capture#raw_received#string returns a proper http response with a body" do
-          before { capture.send(:raw_received).stubs(:string => "HTTP/1.1 200 OK\r\n\r\n{}") }
+          before { transaction.response.raw_io.stubs(:string).returns("HTTP/1.1 200 OK\r\n\r\n{}") }
 
           describe "#body" do
             it "returns the body" do
@@ -43,7 +43,7 @@ class RawHTTPCaptureTest < MiniTest::Test
         end
 
         describe "when the raw_http_capture#raw_received#string returns a proper http response without a body" do
-          before { capture.send(:raw_received).stubs(:string => "HTTP/1.1 200 OK\r\n\r\n") }
+          before { transaction.response.raw_io.stubs(:string).returns("HTTP/1.1 200 OK\r\n\r\n") }
 
           describe "#body" do
             it "returns nil" do
@@ -59,7 +59,7 @@ class RawHTTPCaptureTest < MiniTest::Test
         end
 
         describe "when the raw_http_capture#raw_received returns an empty string" do
-          before { capture.send(:raw_received).stubs(:string).returns('') }
+          before { transaction.response.raw_io.stubs(:string).returns('') }
 
           describe "#body" do
             it "returns nil" do
@@ -75,7 +75,7 @@ class RawHTTPCaptureTest < MiniTest::Test
         end
 
         describe "when there is invalid UTF-8 in the body" do
-          before { capture.send(:raw_received).stubs(:string).returns("HTTP/1.1 200 OK\r\n\r\nOl\xAD") }
+          before { transaction.response.raw_io.stubs(:string).returns("HTTP/1.1 200 OK\r\n\r\nOl\xAD") }
 
           describe "#body" do
             it "returns nil" do
@@ -99,7 +99,7 @@ class RawHTTPCaptureTest < MiniTest::Test
 
       describe "Request" do
         describe "when the raw_http_capture#raw_sent#string returns a proper http response with a body" do
-          before { capture.send(:raw_sent).stubs(:string => "GET / HTTP/1.1\r\n\r\n{}") }
+          before { transaction.request.raw_io.stubs(:string).returns("GET / HTTP/1.1\r\n\r\n{}") }
 
           describe "#body" do
             it "returns the body" do
@@ -121,7 +121,7 @@ class RawHTTPCaptureTest < MiniTest::Test
         end
 
         describe "when the raw_http_capture#raw_sent#string returns a proper http response without a body" do
-          before { capture.send(:raw_sent).stubs(:string).returns("GET / HTTP/1.1\r\n\r\n") }
+          before { transaction.request.raw_io.stubs(:string).returns("GET / HTTP/1.1\r\n\r\n") }
 
           describe "#body" do
             it "returns nil" do
@@ -137,7 +137,7 @@ class RawHTTPCaptureTest < MiniTest::Test
         end
 
         describe "when the raw_http_capture#raw_sent returns an empty string" do
-          before { capture.send(:raw_sent).stubs(:string).returns('') }
+          before { transaction.request.raw_io.stubs(:string).returns('') }
 
           describe "#body" do
             it "returns nil" do
