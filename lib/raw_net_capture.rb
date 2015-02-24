@@ -75,17 +75,11 @@ class RawHTTPCapture < StringIO
       end
 
       def body
-        @body ||= unless calculated_parts?
-          calculate_parts
-          body
-        end
+        @body ||= parts[2]
       end
 
       def headers
-        @headers ||= unless calculated_parts?
-          calculate_parts
-          headers
-        end
+        @headers ||= parts[0]
       end
 
       def raw
@@ -96,16 +90,10 @@ class RawHTTPCapture < StringIO
 
       attr_reader :raw_io
 
-      def calculate_parts
-        @headers, _, @body = raw.partition(HEADER_BODY_SEPARATOR).map do |part|
+      def parts
+        @parts ||= raw.partition(HEADER_BODY_SEPARATOR).map do |part|
           part.empty? ? nil : part
         end
-
-        @calculated_parts = true
-      end
-
-      def calculated_parts?
-        !!@calculated_parts
       end
     end
 
